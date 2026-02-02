@@ -38,6 +38,9 @@ export const character: Character = {
 
     // Bootstrap plugin
     ...(!process.env.IGNORE_BOOTSTRAP ? ['@elizaos/plugin-bootstrap'] : []),
+
+    // Custom plugins
+    './plugin-circle',
   ],
   settings: {
     secrets: {},
