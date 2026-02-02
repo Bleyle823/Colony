@@ -10,7 +10,7 @@
     "@circle-fin/adapter-viem-v2": "^0.3.0",
     "@circle-fin/adapter-solana-kit": "^0.3.0",
     "viem": "^2.0.0",
-    "@elizaos/core": "workspace:*"
+    "@elizaos/core": "1.6.4"
   },
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts",
