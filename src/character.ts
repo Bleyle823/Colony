@@ -41,6 +41,7 @@ export const character: Character = {
 
     // Custom plugins
     './plugin-circle',
+    './plugin-ens',
   ],
   settings: {
     secrets: {},

@@ -14,7 +14,8 @@ var character = {
     ...process.env.DISCORD_API_TOKEN?.trim() ? ["@elizaos/plugin-discord"] : [],
     ...process.env.TWITTER_API_KEY?.trim() && process.env.TWITTER_API_SECRET_KEY?.trim() && process.env.TWITTER_ACCESS_TOKEN?.trim() && process.env.TWITTER_ACCESS_TOKEN_SECRET?.trim() ? ["@elizaos/plugin-twitter"] : [],
     ...process.env.TELEGRAM_BOT_TOKEN?.trim() ? ["@elizaos/plugin-telegram"] : [],
-    ...!process.env.IGNORE_BOOTSTRAP ? ["@elizaos/plugin-bootstrap"] : []
+    ...!process.env.IGNORE_BOOTSTRAP ? ["@elizaos/plugin-bootstrap"] : [],
+    "./plugin-circle"
   ],
   settings: {
     secrets: {},
@@ -138,5 +139,5 @@ export {
   character
 };
 
-//# debugId=79314BB7B6B451DE64756E2164756E21
+//# debugId=4405E73047BA102464756E2164756E21
 //# sourceMappingURL=index.js.map
