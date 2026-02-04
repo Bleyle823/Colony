@@ -1,5 +1,6 @@
 import { type Character } from '@elizaos/core';
 import { circlePlugin } from '../plugin-circle/src/index';
+import { ensPlugin } from '../plugin-ens/src/index';
 
 /**
  * Represents the default character (Eliza) with her specific attributes and behaviors.
@@ -42,7 +43,7 @@ export const character: Character = {
 
     // Custom plugins
     circlePlugin,
-    './plugin-ens',
+    ensPlugin,
     './plugin-arc',
   ],
   settings: {

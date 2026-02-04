@@ -15,7 +15,7 @@ export const getEnsAvatarAction: Action = {
     similes: ["SHOW_ENS_AVATAR", "FETCH_AVATAR", "GET_PROFILE_PIC"],
     description: "Retrieve the avatar URI for a given ENS name.",
     validate: async (runtime: IAgentRuntime) => {
-        return !!runtime.getSetting("ETHEREUM_PROVIDER_URL");
+        return !!(runtime.getSetting("ETHEREUM_PROVIDER_URL") || runtime.getSetting("EVM_PROVIDER_URL"));
     },
     handler: async (
         runtime: IAgentRuntime,

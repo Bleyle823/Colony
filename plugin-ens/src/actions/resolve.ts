@@ -16,7 +16,7 @@ export const resolveEnsAction: Action = {
     similes: ["RESOLVE_NAME", "GET_ENS_ADDRESS", "WHOIS_ENS", "LOOKUP_ENS"],
     description: "Resolve an ENS name to an Ethereum address.",
     validate: async (runtime: IAgentRuntime) => {
-        return !!runtime.getSetting("ETHEREUM_PROVIDER_URL");
+        return !!(runtime.getSetting("ETHEREUM_PROVIDER_URL") || runtime.getSetting("EVM_PROVIDER_URL"));
     },
     handler: async (
         runtime: IAgentRuntime,
@@ -74,7 +74,7 @@ export const reverseResolveEnsAction: Action = {
     similes: ["LOOKUP_ADDRESS", "GET_ENS_NAME", "REVERSE_LOOKUP"],
     description: "Resolve an Ethereum address to its primary ENS name.",
     validate: async (runtime: IAgentRuntime) => {
-        return !!runtime.getSetting("ETHEREUM_PROVIDER_URL");
+        return !!(runtime.getSetting("ETHEREUM_PROVIDER_URL") || runtime.getSetting("EVM_PROVIDER_URL"));
     },
     handler: async (
         runtime: IAgentRuntime,

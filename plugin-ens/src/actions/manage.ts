@@ -44,7 +44,7 @@ const getWallet = (runtime: IAgentRuntime) => {
     return createWalletClient({
         account,
         chain: mainnet,
-        transport: http(runtime.getSetting("ETHEREUM_PROVIDER_URL") || "https://cloudflare-eth.com"),
+        transport: http(runtime.getSetting("ETHEREUM_PROVIDER_URL") || runtime.getSetting("EVM_PROVIDER_URL") || "https://cloudflare-eth.com"),
     });
 };
 

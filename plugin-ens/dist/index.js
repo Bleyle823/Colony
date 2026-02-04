@@ -7,7 +7,7 @@ import {
 import { createPublicClient, http } from "viem";
 import { mainnet } from "viem/chains";
 var getPublicClient = (runtime) => {
-  const transportUrl = runtime.getSetting("ETHEREUM_PROVIDER_URL") || "https://cloudflare-eth.com";
+  const transportUrl = runtime.getSetting("ETHEREUM_PROVIDER_URL") || runtime.getSetting("EVM_PROVIDER_URL") || "https://cloudflare-eth.com";
   return createPublicClient({
     chain: mainnet,
     transport: http(transportUrl)
@@ -21,7 +21,7 @@ var resolveEnsAction = {
   similes: ["RESOLVE_NAME", "GET_ENS_ADDRESS", "WHOIS_ENS", "LOOKUP_ENS"],
   description: "Resolve an ENS name to an Ethereum address.",
   validate: async (runtime) => {
-    return !!runtime.getSetting("ETHEREUM_PROVIDER_URL");
+    return !!(runtime.getSetting("ETHEREUM_PROVIDER_URL") || runtime.getSetting("EVM_PROVIDER_URL"));
   },
   handler: async (runtime, message, state, _options, callback) => {
     elizaLogger.log("Starting RESOLVE_ENS handler...");
@@ -67,7 +67,7 @@ var reverseResolveEnsAction = {
   similes: ["LOOKUP_ADDRESS", "GET_ENS_NAME", "REVERSE_LOOKUP"],
   description: "Resolve an Ethereum address to its primary ENS name.",
   validate: async (runtime) => {
-    return !!runtime.getSetting("ETHEREUM_PROVIDER_URL");
+    return !!(runtime.getSetting("ETHEREUM_PROVIDER_URL") || runtime.getSetting("EVM_PROVIDER_URL"));
   },
   handler: async (runtime, message, state, _options, callback) => {
     elizaLogger.log("Starting REVERSE_RESOLVE_ENS handler...");
@@ -119,7 +119,7 @@ var getEnsAvatarAction = {
   similes: ["SHOW_ENS_AVATAR", "FETCH_AVATAR", "GET_PROFILE_PIC"],
   description: "Retrieve the avatar URI for a given ENS name.",
   validate: async (runtime) => {
-    return !!runtime.getSetting("ETHEREUM_PROVIDER_URL");
+    return !!(runtime.getSetting("ETHEREUM_PROVIDER_URL") || runtime.getSetting("EVM_PROVIDER_URL"));
   },
   handler: async (runtime, message, state, _options, callback) => {
     const client = getPublicClient(runtime);
@@ -248,7 +248,7 @@ var getWallet = (runtime) => {
   return createWalletClient2({
     account,
     chain: mainnet2,
-    transport: http2(runtime.getSetting("ETHEREUM_PROVIDER_URL") || "https://cloudflare-eth.com")
+    transport: http2(runtime.getSetting("ETHEREUM_PROVIDER_URL") || runtime.getSetting("EVM_PROVIDER_URL") || "https://cloudflare-eth.com")
   });
 };
 var setEnsTextAction = {
