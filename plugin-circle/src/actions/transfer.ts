@@ -77,8 +77,12 @@ export const crossChainTransferAction: Action = {
             elizaLogger.log(`Bridging ${amount} USDC from ${sourceChain} to ${destChain}`);
 
             // Initialize Adapters
+            const evmKey = config.EVM_PRIVATE_KEY.startsWith("0x") 
+                ? config.EVM_PRIVATE_KEY 
+                : `0x${config.EVM_PRIVATE_KEY}`;
+
             const evmAdapter = createViemAdapterFromPrivateKey({
-                privateKey: config.EVM_PRIVATE_KEY as `0x${string}`,
+                privateKey: evmKey as `0x${string}`,
             });
 
             const solanaAdapter = createSolanaKitAdapterFromPrivateKey({
