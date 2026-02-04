@@ -27,6 +27,7 @@
     "dist"
   ],
   "dependencies": {
+    "@circle-fin/developer-controlled-wallets": "^10.1.0",
     "@elizaos/cli": "1.6.4",
     "@elizaos/client": "1.6.4",
     "@elizaos/core": "1.6.4",
@@ -37,6 +38,7 @@
     "@elizaos/server": "1.6.4",
     "@tanstack/react-query": "^5.29.0",
     "clsx": "^2.1.1",
+    "dotenv": "^17.2.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "tailwind-merge": "^2.6.0",
