@@ -8,7 +8,11 @@
     "build": "tsc"
   },
   "dependencies": {
+    "@circle-fin/adapter-solana-kit": "^1.2.1",
+    "@circle-fin/adapter-viem-v2": "^1.4.0",
+    "@circle-fin/bridge-kit": "^1.5.0",
     "@elizaos/core": "1.6.4",
+    "@solana/web3.js": "^1.98.4",
     "viem": "^2.45.1",
     "zod": "^3.23.8"
   },
