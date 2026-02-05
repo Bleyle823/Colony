@@ -3,7 +3,7 @@ import { mainnet } from "viem/chains";
 import { IAgentRuntime } from "@elizaos/core";
 
 export const getPublicClient = (runtime: IAgentRuntime) => {
-    const transportUrl = runtime.getSetting("ETHEREUM_PROVIDER_URL") || runtime.getSetting("EVM_PROVIDER_URL") || "https://cloudflare-eth.com";
+    const transportUrl = runtime.getSetting("ETHEREUM_PROVIDER_URL") || runtime.getSetting("EVM_PROVIDER_URL") || "https://eth.llamarpc.com";
     return createPublicClient({
         chain: mainnet,
         transport: http(transportUrl),

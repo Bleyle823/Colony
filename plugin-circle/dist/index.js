@@ -4119,8 +4119,9 @@ var crossChainTransferAction = {
       const sourceChain = fromMatch[1];
       const destChain = toMatch[1];
       elizaLogger.log(`Bridging ${amount} USDC from ${sourceChain} to ${destChain}`);
+      const evmKey = config.EVM_PRIVATE_KEY.startsWith("0x") ? config.EVM_PRIVATE_KEY : `0x${config.EVM_PRIVATE_KEY}`;
       const evmAdapter = createViemAdapterFromPrivateKey({
-        privateKey: config.EVM_PRIVATE_KEY
+        privateKey: evmKey
       });
       const solanaAdapter = createSolanaKitAdapterFromPrivateKey({
         privateKey: config.SOLANA_PRIVATE_KEY

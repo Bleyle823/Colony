@@ -27,6 +27,9 @@
     "dist"
   ],
   "dependencies": {
+    "@elizaos/plugin-circle": "file:./plugin-circle",
+    "@elizaos/plugin-arc": "file:./plugin-arc",
+    "@elizaos/plugin-ens": "file:./plugin-ens",
     "@circle-fin/developer-controlled-wallets": "^10.1.0",
     "@elizaos/cli": "1.6.4",
     "@elizaos/client": "1.6.4",
@@ -43,6 +46,7 @@
     "react-dom": "^18.3.1",
     "tailwind-merge": "^2.6.0",
     "tailwindcss": "^4.1.10",
+    "viem": "^2.45.1",
     "zod": "4.1.11"
   },
   "devDependencies": {

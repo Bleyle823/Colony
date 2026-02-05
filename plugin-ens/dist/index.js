@@ -7,7 +7,7 @@ import {
 import { createPublicClient, http } from "viem";
 import { mainnet } from "viem/chains";
 var getPublicClient = (runtime) => {
-  const transportUrl = runtime.getSetting("ETHEREUM_PROVIDER_URL") || runtime.getSetting("EVM_PROVIDER_URL") || "https://cloudflare-eth.com";
+  const transportUrl = runtime.getSetting("ETHEREUM_PROVIDER_URL") || runtime.getSetting("EVM_PROVIDER_URL") || "https://eth.llamarpc.com";
   return createPublicClient({
     chain: mainnet,
     transport: http(transportUrl)

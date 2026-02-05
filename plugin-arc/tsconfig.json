@@ -1,14 +1,15 @@
 {
   "compilerOptions": {
-    "rootDirs": ["src"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "target": "ESNext",
     "outDir": "dist",
-    "target": "es2020",
-    "module": "esnext",
-    "moduleResolution": "bundler",
     "strict": true,
     "declaration": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
 }

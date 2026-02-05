@@ -1,6 +1,4 @@
 import { type Character } from '@elizaos/core';
-import { circlePlugin } from '../plugin-circle/src/index';
-import { ensPlugin } from '../plugin-ens/src/index';
 
 /**
  * Represents the default character (Eliza) with her specific attributes and behaviors.
@@ -31,9 +29,9 @@ export const character: Character = {
     // Platform plugins
     ...(process.env.DISCORD_API_TOKEN?.trim() ? ['@elizaos/plugin-discord'] : []),
     ...(process.env.TWITTER_API_KEY?.trim() &&
-    process.env.TWITTER_API_SECRET_KEY?.trim() &&
-    process.env.TWITTER_ACCESS_TOKEN?.trim() &&
-    process.env.TWITTER_ACCESS_TOKEN_SECRET?.trim()
+      process.env.TWITTER_API_SECRET_KEY?.trim() &&
+      process.env.TWITTER_ACCESS_TOKEN?.trim() &&
+      process.env.TWITTER_ACCESS_TOKEN_SECRET?.trim()
       ? ['@elizaos/plugin-twitter']
       : []),
     ...(process.env.TELEGRAM_BOT_TOKEN?.trim() ? ['@elizaos/plugin-telegram'] : []),
@@ -41,10 +39,7 @@ export const character: Character = {
     // Bootstrap plugin
     ...(!process.env.IGNORE_BOOTSTRAP ? ['@elizaos/plugin-bootstrap'] : []),
 
-    // Custom plugins
-    circlePlugin,
-    ensPlugin,
-    './plugin-arc',
+    // Custom plugins are registered in src/index.ts projectAgent.plugins
   ],
   settings: {
     secrets: {},

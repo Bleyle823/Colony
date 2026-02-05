@@ -6,9 +6,9 @@
   "types": "dist/index.d.ts",
   "dependencies": {
     "@circle-fin/developer-controlled-wallets": "^1.0.0",
-    "@circle-fin/bridge-kit": "^0.3.0",
-    "@circle-fin/adapter-viem-v2": "^0.3.0",
-    "@circle-fin/adapter-solana-kit": "^0.3.0",
+    "@circle-fin/bridge-kit": "^1.5.0",
+    "@circle-fin/adapter-viem-v2": "^1.4.0",
+    "@circle-fin/adapter-solana-kit": "^1.2.1",
     "viem": "^2.0.0",
     "@elizaos/core": "1.6.4"
   },
