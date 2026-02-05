@@ -2,6 +2,7 @@ import { logger, type IAgentRuntime, type Project, type ProjectAgent } from '@el
 import starterPlugin from './plugin.ts';
 import { character } from './character.ts';
 import { arcPlugin } from '../plugin-arc/src/index.ts';
+import { kaminoPlugin } from '../plugin-kamino/src/index.ts';
 
 const initCharacter = ({ runtime }: { runtime: IAgentRuntime }) => {
   logger.info('Initializing character');
@@ -11,7 +12,7 @@ const initCharacter = ({ runtime }: { runtime: IAgentRuntime }) => {
 export const projectAgent: ProjectAgent = {
   character,
   init: async (runtime: IAgentRuntime) => await initCharacter({ runtime }),
-  plugins: [starterPlugin, arcPlugin],
+  plugins: [starterPlugin, arcPlugin, kaminoPlugin],
 };
 
 const project: Project = {

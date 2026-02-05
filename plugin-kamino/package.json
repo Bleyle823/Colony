@@ -1,0 +1,28 @@
+{
+  "name": "@elizaos/plugin-kamino",
+  "version": "0.1.0",
+  "main": "dist/index.js",
+  "type": "module",
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "@elizaos/core": "1.6.4",
+    "@kamino-finance/klend-sdk": "^7.3.18",
+    "@solana/web3.js": "^1.98.0",
+    "@jup-ag/api": "^6.0.0",
+    "bs58": "^6.0.0",
+    "decimal.js": "^10.4.3",
+    "zod": "^3.23.8",
+    "bn.js": "^5.2.1"
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts",
+    "dev": "tsup src/index.ts --format esm --dts --watch",
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0",
+    "@types/bn.js": "^5.1.0"
+  }
+}
