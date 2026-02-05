@@ -1,3 +1,4 @@
+// @ts-ignore
 import { Plugin } from "@elizaos/core";
 import { buyRwaAction } from "./actions/swap.js";
 import { depositAction, borrowAction } from "./actions/lending.js";

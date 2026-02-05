@@ -39,13 +39,41 @@ ${errorMessages}`
 // src/actions/swap.ts
 import bs58 from "bs58";
 import { createJupiterApiClient } from "@jup-ag/api";
+
+// src/constants.ts
+var RWA_TOKENS = {
+  "TSLAX": "XsDoVfqeBukxuZHWhdvWHBhgEHjGNst4MLodqsJHzoB",
+  "CRCLX": "XsueG8BtpquVJX9LVLLEGuViXUungE6WmK5YZ3p3bd1",
+  "GOOGLX": "XsCPL9dNWBMvFtTmwcCA5v3xWPSMEBCszbQdiLLq6aN",
+  "GLDX": "Xsv9hRk1z5ystj9MhnA7Lq4vjSsLwzL2nxrwmwtD3re",
+  "AMZNX": "Xs3eBt7uRfJX8QUs4suhyU8p2M6DoUDrJyWBa8LLZsg",
+  "NVDAX": "Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh",
+  "METAX": "Xsa62P5mvPszXL1krVUnU5ar38bBSVcWAB6fmPCo5Zu",
+  "AAPLX": "XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp"
+};
+function getTokenMint(symbol) {
+  return RWA_TOKENS[symbol.toUpperCase()];
+}
+
+// src/actions/swap.ts
 var buyRwaAction = {
   name: "BUY_RWA",
-  similes: ["SWAP_USDC_FOR_RWA", "BUY_TOKENIZED_STOCK", "SWAP_TOKENS"],
-  description: "Swaps USDC for a target RWA token (e.g. tokenized stock) using Jupiter Aggregator.",
+  similes: ["SWAP_USDC_FOR_RWA", "BUY_TOKENIZED_STOCK", "SWAP_TOKENS", "BUY_TSLAX", "BUY_GOOGLX", "BUY_AMZNX", "BUY_NVDAX", "BUY_GLDX", "BUY_CRCLX", "BUY_METAX", "BUY_AAPLX"],
+  description: "Swaps USDC for a target RWA token (e.g. tokenized stock TSLAx, AMZNx, NVDAx, GLDx, etc.) using Jupiter Aggregator.",
   validate: async (runtime) => {
-    const config = await validateKaminoConfig(runtime);
-    return !!config.SOLANA_PRIVATE_KEY;
+    try {
+      const config = await validateKaminoConfig(runtime);
+      const isValid = !!config.SOLANA_PRIVATE_KEY;
+      if (isValid) {
+        elizaLogger.log("BUY_RWA validation passed.");
+      } else {
+        elizaLogger.warn("BUY_RWA validation failed: Missing SOLANA_PRIVATE_KEY");
+      }
+      return isValid;
+    } catch (e) {
+      elizaLogger.warn("BUY_RWA validation failed (Action Disabled): " + (e instanceof Error ? e.message : String(e)));
+      return false;
+    }
   },
   handler: async (runtime, message, state, _options, callback) => {
     elizaLogger.log("Starting BUY_RWA handler...");
@@ -55,14 +83,26 @@ var buyRwaAction = {
       const wallet = Keypair.fromSecretKey(bs58.decode(config.SOLANA_PRIVATE_KEY));
       const text = message.content.text;
       const amountMatch = text.match(/(\d+(\.\d+)?) (USDC|dollars)/i) || text.match(/buy (\d+(\.\d+)?)/i);
-      const mintMatch = text.match(/[1-9A-HJ-NP-Za-km-z]{32,44}/);
-      const targetMint = mintMatch ? mintMatch[0] : config.KAMINO_RWA_MINT;
+      let targetMint = config.KAMINO_RWA_MINT;
+      const symbolMatch = text.match(/(TSLAx|CRCLx|GOOGLx|GLDx|AMZNx|NVDAx|METAx|AAPLx)/i);
+      if (symbolMatch) {
+        const symbol = symbolMatch[0];
+        const mappedMint = getTokenMint(symbol);
+        if (mappedMint) {
+          targetMint = mappedMint;
+          elizaLogger.log(`Resolved symbol ${symbol} to mint ${targetMint}`);
+        }
+      }
+      if (!symbolMatch) {
+        const mintMatch = text.match(/[1-9A-HJ-NP-Za-km-z]{32,44}/);
+        if (mintMatch) targetMint = mintMatch[0];
+      }
       if (!amountMatch) {
         if (callback) callback({ text: "Please specify the amount of USDC to swap." });
         return false;
       }
       if (!targetMint) {
-        if (callback) callback({ text: "Target RWA token mint not found. Please provide it or set KAMINO_RWA_MINT in config." });
+        if (callback) callback({ text: "Target RWA token mint not found. Please specify a symbol (TSLAx, GOOGLx, etc.), an address, or set KAMINO_RWA_MINT in config." });
         return false;
       }
       const amountUSDC = parseFloat(amountMatch[1]);
@@ -80,12 +120,13 @@ var buyRwaAction = {
       if (!quote) {
         throw new Error("No quote found");
       }
+      elizaLogger.log("Quote received:", quote);
       const swapResult = await jupiterQuoteApi.swapPost({
         swapRequest: {
           quoteResponse: quote,
-          userPublicKey: wallet.publicKey.toBase58(),
-          dynamicComputeUnitLimit: true,
-          prioritizationFeeLamports: "auto"
+          userPublicKey: wallet.publicKey.toBase58()
+          // dynamicComputeUnitLimit: true, // Commenting out to simplify
+          // prioritizationFeeLamports: "auto", // Commenting out to see if this is the cause of "jitoTipLamports" check error
         }
       });
       if (!swapResult || !swapResult.swapTransaction) {
@@ -154,6 +195,10 @@ async function executeKaminoAction(runtime, actionType, amount, tokenSymbol, min
   );
   if (!market) throw new Error("Failed to load Kamino market");
   let tokenMint = mintAddress;
+  if (!tokenMint && tokenSymbol) {
+    const knownMint = getTokenMint(tokenSymbol);
+    if (knownMint) tokenMint = knownMint;
+  }
   if (!tokenMint) {
     const reserve = market.getReserve(tokenSymbol);
     if (!reserve) throw new Error(`Reserve for ${tokenSymbol} not found`);
@@ -191,8 +236,8 @@ var depositAction = {
     elizaLogger2.log("Starting DEPOSIT_ON_KAMINO...");
     try {
       const text = message.content.text;
-      const amountMatch = text.match(/(\d+(\.\d+)?) (USDC|SOL|RWA)/i) || text.match(/deposit (\d+(\.\d+)?)/i);
-      const symbolMatch = text.match(/(USDC|SOL|RWA)/i);
+      const amountMatch = text.match(/(\d+(\.\d+)?) (USDC|SOL|RWA|TSLAx|CRCLx|GOOGLx|GLDx|AMZNx|NVDAx|METAx|AAPLx)/i) || text.match(/deposit (\d+(\.\d+)?)/i);
+      const symbolMatch = text.match(/(USDC|SOL|RWA|TSLAx|CRCLx|GOOGLx|GLDx|AMZNx|NVDAx|METAx|AAPLx)/i);
       if (!amountMatch) {
         if (callback) callback({ text: "Please specify amount to deposit." });
         return false;
@@ -200,7 +245,10 @@ var depositAction = {
       const amount = parseFloat(amountMatch[1]);
       const symbol = symbolMatch ? symbolMatch[0].toUpperCase() : "USDC";
       let mint;
-      if (symbol === "RWA") {
+      const knownMint = getTokenMint(symbol);
+      if (knownMint) {
+        mint = knownMint;
+      } else if (symbol === "RWA") {
         const config = await validateKaminoConfig(runtime);
         mint = config.KAMINO_RWA_MINT;
         if (!mint) {
@@ -270,26 +318,41 @@ import { elizaLogger as elizaLogger3 } from "@elizaos/core";
 var executeYieldLoopAction = {
   name: "EXECUTE_YIELD_LOOP",
   similes: ["LOOP_YIELD", "LEVERAGE_UP_RWA", "BORROW_BUY_DEPOSIT_LOOP"],
-  description: "Executes a leveraged yield loop: Borrow USDC -> Buy RWA -> Deposit RWA. Can repeat for multiple iterations.",
+  description: "Executes a leveraged yield loop: Borrow USDC -> Buy RWA (e.g. TSLAx) -> Deposit RWA. Can repeat for multiple iterations.",
   validate: async (runtime) => {
     const config = await validateKaminoConfig(runtime);
-    return !!config.SOLANA_PRIVATE_KEY && !!config.KAMINO_RWA_MINT;
+    return !!config.SOLANA_PRIVATE_KEY;
   },
   handler: async (runtime, message, state, _options, callback) => {
     elizaLogger3.log("Starting EXECUTE_YIELD_LOOP...");
     try {
+      const config = await validateKaminoConfig(runtime);
       const text = message.content.text;
       const loopsMatch = text.match(/(\d+) (times|loops)/i);
       const amountMatch = text.match(/(\d+(\.\d+)?) (USDC)/i);
+      let tokenSymbol = "RWA";
+      const symbolMatch = text.match(/(TSLAx|CRCLx|GOOGLx|GLDx|AMZNx|NVDAx|METAx|AAPLx)/i);
+      if (symbolMatch) {
+        tokenSymbol = symbolMatch[0];
+      }
+      let targetMint = config.KAMINO_RWA_MINT;
+      if (symbolMatch) {
+        const mapped = getTokenMint(tokenSymbol);
+        if (mapped) targetMint = mapped;
+      }
+      if (!targetMint) {
+        if (callback) callback({ text: "Target RWA token not identified. Please specify a symbol (TSLAx, GOOGLx) or set KAMINO_RWA_MINT." });
+        return false;
+      }
       const loops = loopsMatch ? parseInt(loopsMatch[1]) : 1;
       const startAmount = amountMatch ? parseFloat(amountMatch[1]) : 0;
       if (startAmount <= 0) {
         if (callback) callback({ text: "Please specify the amount of USDC to borrow for the loop." });
         return false;
       }
-      elizaLogger3.log(`Executing ${loops} loops, starting with borrow of ${startAmount} USDC...`);
+      elizaLogger3.log(`Executing ${loops} loops with ${tokenSymbol} (${targetMint}), starting with borrow of ${startAmount} USDC...`);
       if (callback) {
-        callback({ text: `Starting ${loops}x Yield Loop. 1. Borrow ${startAmount} USDC...` });
+        callback({ text: `Starting ${loops}x Yield Loop with ${tokenSymbol}. 1. Borrow ${startAmount} USDC...` });
       }
       let currentBorrowAmount = startAmount;
       for (let i = 1; i <= loops; i++) {
@@ -297,11 +360,13 @@ var executeYieldLoopAction = {
         const borrowMsg = { ...message, content: { ...message.content, text: `Borrow ${currentBorrowAmount} USDC` } };
         const borrowSuccess = await borrowAction.handler(runtime, borrowMsg, state, _options, void 0);
         if (!borrowSuccess) throw new Error(`Loop ${i}: Borrow failed.`);
-        const swapMsg = { ...message, content: { ...message.content, text: `Buy ${currentBorrowAmount} USDC worth of RWA` } };
+        const swapMsg = { ...message, content: { ...message.content, text: `Buy ${currentBorrowAmount} USDC worth of ${tokenSymbol}` } };
         const swapSuccess = await buyRwaAction.handler(runtime, swapMsg, state, _options, void 0);
         if (!swapSuccess) throw new Error(`Loop ${i}: Swap failed.`);
-        const depositMsg = { ...message, content: { ...message.content, text: `Deposit RWA` } };
-        elizaLogger3.log(`Loop ${i}: Depositing RWA...`);
+        const depositMsg = { ...message, content: { ...message.content, text: `Deposit ${tokenSymbol}` } };
+        elizaLogger3.log(`Loop ${i}: Depositing ${tokenSymbol}...`);
+        const depositSuccess = await depositAction.handler(runtime, depositMsg, state, _options, void 0);
+        if (!depositSuccess) throw new Error(`Loop ${i}: Deposit failed.`);
         currentBorrowAmount = currentBorrowAmount * 0.7;
         if (callback) {
           callback({ text: `Loop ${i} complete. Borrowed -> Swapped -> Deposited.` });
@@ -309,8 +374,8 @@ var executeYieldLoopAction = {
       }
       if (callback) {
         callback({
-          text: `Yield Loop execution completed successfully (${loops} iterations).`,
-          content: { success: true, loops }
+          text: `Yield Loop execution completed successfully (${loops} iterations of ${tokenSymbol}).`,
+          content: { success: true, loops, token: tokenSymbol }
         });
       }
       return true;
@@ -324,12 +389,12 @@ var executeYieldLoopAction = {
     [
       {
         user: "{{user1}}",
-        content: { text: "Execute 3 loops starting with 100 USDC" }
+        content: { text: "Execute 3 loops with TSLAx starting with 100 USDC" }
       },
       {
         user: "{{agentName}}",
         content: {
-          text: "Starting 3x Yield Loop...",
+          text: "Starting 3x Yield Loop with TSLAx...",
           action: "EXECUTE_YIELD_LOOP"
         }
       }

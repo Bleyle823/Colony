@@ -7,11 +7,22 @@ import { getTokenMint } from "../constants.js";
 
 export const buyRwaAction: Action = {
     name: "BUY_RWA",
-    similes: ["SWAP_USDC_FOR_RWA", "BUY_TOKENIZED_STOCK", "SWAP_TOKENS", "BUY_TSLAX", "BUY_GOOGLX", "BUY_AMZNX", "BUY_NVDAX"],
-    description: "Swaps USDC for a target RWA token (e.g. tokenized stock TSLAx, AMZNx, NVDAx, etc.) using Jupiter Aggregator.",
+    similes: ["SWAP_USDC_FOR_RWA", "BUY_TOKENIZED_STOCK", "SWAP_TOKENS", "BUY_TSLAX", "BUY_GOOGLX", "BUY_AMZNX", "BUY_NVDAX", "BUY_GLDX", "BUY_CRCLX", "BUY_METAX", "BUY_AAPLX"],
+    description: "Swaps USDC for a target RWA token (e.g. tokenized stock TSLAx, AMZNx, NVDAx, GLDx, etc.) using Jupiter Aggregator.",
     validate: async (runtime: IAgentRuntime) => {
-        const config = await validateKaminoConfig(runtime);
-        return !!config.SOLANA_PRIVATE_KEY;
+        try {
+            const config = await validateKaminoConfig(runtime);
+            const isValid = !!config.SOLANA_PRIVATE_KEY;
+            if (isValid) {
+                elizaLogger.log("BUY_RWA validation passed."); // Log success
+            } else {
+                elizaLogger.warn("BUY_RWA validation failed: Missing SOLANA_PRIVATE_KEY");
+            }
+            return isValid;
+        } catch (e) {
+            elizaLogger.warn("BUY_RWA validation failed (Action Disabled): " + (e instanceof Error ? e.message : String(e)));
+            return false;
+        }
     },
     handler: async (
         runtime: IAgentRuntime,
@@ -21,7 +32,7 @@ export const buyRwaAction: Action = {
         callback?: HandlerCallback
     ) => {
         elizaLogger.log("Starting BUY_RWA handler...");
-        
+
         try {
             const config = await validateKaminoConfig(runtime);
             const connection = new Connection(config.SOLANA_RPC_URL);
@@ -30,11 +41,11 @@ export const buyRwaAction: Action = {
             // Parse Input: Amount and optional Token Mint/Symbol
             const text = message.content.text;
             const amountMatch = text.match(/(\d+(\.\d+)?) (USDC|dollars)/i) || text.match(/buy (\d+(\.\d+)?)/i);
-            
+
             // Extract target mint from message or config
             // Check for known symbols first
             let targetMint = config.KAMINO_RWA_MINT;
-            
+
             // Check for symbols in text (e.g., TSLAx, AMZNx)
             const symbolMatch = text.match(/(TSLAx|CRCLx|GOOGLx|GLDx|AMZNx|NVDAx|METAx|AAPLx)/i);
             if (symbolMatch) {
@@ -48,7 +59,7 @@ export const buyRwaAction: Action = {
 
             // Fallback to explicit address check
             if (!symbolMatch) {
-                const mintMatch = text.match(/[1-9A-HJ-NP-Za-km-z]{32,44}/); 
+                const mintMatch = text.match(/[1-9A-HJ-NP-Za-km-z]{32,44}/);
                 if (mintMatch) targetMint = mintMatch[0];
             }
 
