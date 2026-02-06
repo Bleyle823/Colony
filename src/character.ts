@@ -20,7 +20,7 @@ export const character: Character = {
     ...(process.env.OPENROUTER_API_KEY?.trim() ? ['@elizaos/plugin-openrouter'] : []),
 
     // Embedding-capable plugins (optional, based on available credentials)
-    ...(process.env.OPENAI_API_KEY?.trim() ? ['@elizaos/plugin-openai'] : []),
+    // ...(process.env.OPENAI_API_KEY?.trim() ? ['@elizaos/plugin-openai'] : []),
     ...(process.env.GOOGLE_GENERATIVE_AI_API_KEY?.trim() ? ['@elizaos/plugin-google-genai'] : []),
 
     // Ollama as fallback (only if no main LLM providers are configured)
