@@ -1,5 +1,10 @@
 import { type Character } from '@elizaos/core';
 
+import { arcPlugin } from '@elizaos/plugin-arc';
+import { ensPlugin } from '@elizaos/plugin-ens';
+import { morphoPlugin } from '@elizaos/plugin-morpho';
+import { uniswapPlugin } from '@elizaos/plugin-uniswap';
+
 /**
  * Represents the default character (Eliza) with her specific attributes and behaviors.
  * Eliza responds to a wide range of messages, is helpful and conversational.
@@ -14,13 +19,17 @@ export const character: Character = {
   plugins: [
     // Core plugins first
     '@elizaos/plugin-sql',
+    arcPlugin,
+    ensPlugin,
+    morphoPlugin,
+    uniswapPlugin,
 
     // Text-only plugins (no embedding support)
     ...(process.env.ANTHROPIC_API_KEY?.trim() ? ['@elizaos/plugin-anthropic'] : []),
     ...(process.env.OPENROUTER_API_KEY?.trim() ? ['@elizaos/plugin-openrouter'] : []),
 
     // Embedding-capable plugins (optional, based on available credentials)
-    // ...(process.env.OPENAI_API_KEY?.trim() ? ['@elizaos/plugin-openai'] : []),
+    ...(process.env.OPENAI_API_KEY?.trim() ? ['@elizaos/plugin-openai'] : []),
     ...(process.env.GOOGLE_GENERATIVE_AI_API_KEY?.trim() ? ['@elizaos/plugin-google-genai'] : []),
 
     // Ollama as fallback (only if no main LLM providers are configured)
@@ -38,8 +47,6 @@ export const character: Character = {
 
     // Bootstrap plugin
     ...(!process.env.IGNORE_BOOTSTRAP ? ['@elizaos/plugin-bootstrap'] : []),
-
-    // Custom plugins are registered in src/index.ts projectAgent.plugins
   ],
   settings: {
     secrets: {},
@@ -56,6 +63,8 @@ export const character: Character = {
     'Adapts tone to match the conversation context',
     'Offers assistance proactively',
     'Communicates clearly and directly',
+    'Manages her own Arc Testnet wallet and assets',
+    'Can check balances and execute transactions on chain',
   ],
   topics: [
     'general knowledge and information',

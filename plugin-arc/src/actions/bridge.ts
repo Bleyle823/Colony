@@ -79,19 +79,19 @@ export const bridgeAction: Action = {
 
             const amount = amountMatch[1];
             const rawDest = toMatch[1].trim().toLowerCase();
-            
+
             // Resolve destination chain
             let destChain = CHAIN_MAPPING[rawDest];
-            
+
             // Fallback: try to match partial names if not found
             if (!destChain) {
-                 const keys = Object.keys(CHAIN_MAPPING);
-                 const found = keys.find(k => rawDest.includes(k));
-                 if (found) destChain = CHAIN_MAPPING[found];
+                const keys = Object.keys(CHAIN_MAPPING);
+                const found = keys.find(k => rawDest.includes(k));
+                if (found) destChain = CHAIN_MAPPING[found];
             }
 
             if (!destChain) {
-                 if (callback) {
+                if (callback) {
                     callback({
                         text: `Unsupported or unknown destination chain: ${rawDest}. Supported: Base, Ethereum, Solana, Arbitrum, Optimism, Polygon, Avalanche (Testnets).`,
                     });
@@ -108,8 +108,8 @@ export const bridgeAction: Action = {
             }
 
             // Initialize Source Adapter (EVM - Arc)
-            const privateKey = config.ARC_PRIVATE_KEY.startsWith("0x") 
-                ? config.ARC_PRIVATE_KEY as `0x${string}` 
+            const privateKey = config.ARC_PRIVATE_KEY.startsWith("0x")
+                ? config.ARC_PRIVATE_KEY as `0x${string}`
                 : `0x${config.ARC_PRIVATE_KEY}`;
 
             const sourceAdapter = createViemAdapterFromPrivateKey({
@@ -118,12 +118,12 @@ export const bridgeAction: Action = {
 
             // Initialize Destination Adapter
             let destAdapter;
-            
+
             if (destChain.includes("Solana")) {
                 if (!config.SOLANA_PRIVATE_KEY) {
-                     const errorMsg = "Bridging to Solana requires SOLANA_PRIVATE_KEY in the agent settings.";
-                     if (callback) callback({ text: errorMsg });
-                     return { success: false, error: errorMsg };
+                    const errorMsg = "Bridging to Solana requires SOLANA_PRIVATE_KEY in the agent settings.";
+                    if (callback) callback({ text: errorMsg });
+                    return { success: false, error: errorMsg };
                 }
                 destAdapter = createSolanaKitAdapterFromPrivateKey({
                     privateKey: config.SOLANA_PRIVATE_KEY,
@@ -141,7 +141,12 @@ export const bridgeAction: Action = {
                 amount: amount,
             });
 
-            logger.log("Bridge result:", JSON.stringify(result, null, 2));
+            // Serialize result safely handling BigInt
+            const safeResult = JSON.parse(JSON.stringify(result, (key, value) =>
+                typeof value === 'bigint' ? value.toString() : value
+            ));
+
+            logger.log("Bridge result:", JSON.stringify(safeResult, null, 2));
 
             // Format output
             const steps = result.steps || [];
@@ -164,7 +169,7 @@ export const bridgeAction: Action = {
                         amount,
                         source: "Arc_Testnet",
                         destination: destChain,
-                        result
+                        result: safeResult
                     }
                 });
             }
@@ -176,7 +181,7 @@ export const bridgeAction: Action = {
                     amount,
                     source: "Arc_Testnet",
                     destination: destChain,
-                    result
+                    result: safeResult
                 }
             };
 

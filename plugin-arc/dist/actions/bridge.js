@@ -113,7 +113,9 @@ export const bridgeAction = {
                 to: { adapter: destAdapter, chain: destChain },
                 amount: amount,
             });
-            logger.log("Bridge result:", JSON.stringify(result, null, 2));
+            // Serialize result safely handling BigInt
+            const safeResult = JSON.parse(JSON.stringify(result, (key, value) => typeof value === 'bigint' ? value.toString() : value));
+            logger.log("Bridge result:", JSON.stringify(safeResult, null, 2));
             // Format output
             const steps = result.steps || [];
             const lastStep = steps[steps.length - 1];
@@ -134,7 +136,7 @@ export const bridgeAction = {
                         amount,
                         source: "Arc_Testnet",
                         destination: destChain,
-                        result
+                        result: safeResult
                     }
                 });
             }
@@ -145,7 +147,7 @@ export const bridgeAction = {
                     amount,
                     source: "Arc_Testnet",
                     destination: destChain,
-                    result
+                    result: safeResult
                 }
             };
         }

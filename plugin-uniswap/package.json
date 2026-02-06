@@ -1,0 +1,41 @@
+{
+    "name": "@elizaos/plugin-uniswap",
+    "version": "0.1.0",
+    "type": "module",
+    "main": "dist/index.js",
+    "module": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "exports": {
+        "./package.json": "./package.json",
+        ".": {
+            "import": {
+                "types": "./dist/index.d.ts",
+                "default": "./dist/index.js"
+            }
+        }
+    },
+    "files": [
+        "dist",
+        "README.md",
+        "package.json"
+    ],
+    "scripts": {
+        "build": "tsup",
+        "dev": "tsup --watch",
+        "test": "bun test"
+    },
+    "dependencies": {
+        "@elizaos/core": "1.6.4",
+        "@uniswap/v4-sdk": "latest",
+        "@uniswap/sdk-core": "^5.0.0",
+        "@uniswap/universal-router-sdk": "latest",
+        "ethers": "^6.13.1"
+    },
+    "devDependencies": {
+        "tsup": "8.0.2",
+        "typescript": "5.4.5"
+    },
+    "peerDependencies": {
+        "whatwg-url": "7.1.0"
+    }
+}
