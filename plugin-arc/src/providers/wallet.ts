@@ -34,9 +34,16 @@ export const walletProvider: Provider = {
                 transport: http(config.ARC_RPC_URL)
             });
 
-            const balance = await publicClient.getBalance({
+            // Add timeout to prevent hanging
+            const balancePromise = publicClient.getBalance({
                 address,
             });
+            
+            const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Balance fetch timeout')), 5000)
+            );
+            
+            const balance = await Promise.race([balancePromise, timeoutPromise]) as bigint;
 
             const formattedBalance = formatEther(balance);
 

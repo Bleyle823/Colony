@@ -6,6 +6,9 @@ export const circleEnvSchema = z.object({
     CIRCLE_ENTITY_SECRET: z.string().min(1, "Circle Entity Secret is required"),
     EVM_PRIVATE_KEY: z.string().optional(), // For BridgeKit
     SOLANA_PRIVATE_KEY: z.string().optional(), // For BridgeKit
+    CIRCLE_WALLET_SET_ID: z.string().optional(), // For Programmable Wallets
+    CIRCLE_GATEWAY_ENDPOINT: z.string().optional().default("https://api.circle.com/v1/gateway"), // Gateway API endpoint
+    ENABLE_GAS_ABSTRACTION: z.boolean().optional().default(false), // Gas abstraction feature
 });
 
 export type CircleConfig = z.infer<typeof circleEnvSchema>;
@@ -19,6 +22,9 @@ export async function validateCircleConfig(
             CIRCLE_ENTITY_SECRET: runtime.getSetting("CIRCLE_ENTITY_SECRET"),
             EVM_PRIVATE_KEY: runtime.getSetting("EVM_PRIVATE_KEY"),
             SOLANA_PRIVATE_KEY: runtime.getSetting("SOLANA_PRIVATE_KEY"),
+            CIRCLE_WALLET_SET_ID: runtime.getSetting("CIRCLE_WALLET_SET_ID"),
+            CIRCLE_GATEWAY_ENDPOINT: runtime.getSetting("CIRCLE_GATEWAY_ENDPOINT"),
+            ENABLE_GAS_ABSTRACTION: runtime.getSetting("ENABLE_GAS_ABSTRACTION") === "true",
         };
 
         return circleEnvSchema.parse(config);

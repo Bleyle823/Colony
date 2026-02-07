@@ -227,7 +227,7 @@ var getQuoteAction = {
           text: `Quote: ${amount} ${tokenIn} \u2248 ${quote} ${tokenOut} on Uniswap V4.`
         });
       }
-      return true;
+      return { success: true, text: `Quote: ${amount} ${tokenIn} \u2248 ${quote} ${tokenOut}`, data: { amount, tokenIn, tokenOut, quote } };
     } catch (error) {
       elizaLogger.error("Error in GET_QUOTE handler:", error);
       if (callback) {
@@ -235,7 +235,7 @@ var getQuoteAction = {
           text: `Failed to get quote: ${error.message}`
         });
       }
-      return false;
+      return { success: false, error: error?.message ?? "Unknown error" };
     }
   },
   examples: [
@@ -276,7 +276,14 @@ var swapTokensAction = {
     let tokenOut = symbols[1];
     if (!tokenIn) tokenIn = "ETH";
     if (!tokenOut) tokenOut = "USDC";
-    if (!amountMatch) {
+    const amountNum = parseFloat(amount);
+    if (!amountMatch || isNaN(amountNum) || amountNum <= 0) {
+      if (callback) {
+        callback({
+          text: "Please specify a valid positive amount to swap (e.g. Swap 0.1 ETH to USDC)."
+        });
+      }
+      return { success: false, error: "Invalid or missing swap amount" };
     }
     try {
       const service = new UniswapService(runtime);
@@ -287,7 +294,7 @@ var swapTokensAction = {
           text: `Swap executed! Transaction Hash: ${txHash}`
         });
       }
-      return true;
+      return { success: true, text: `Swap executed. Tx: ${txHash}`, data: { txHash, tokenIn, tokenOut, amount } };
     } catch (error) {
       elizaLogger2.error("Error in SWAP_TOKENS handler:", error);
       if (callback) {
@@ -295,7 +302,7 @@ var swapTokensAction = {
           text: `Failed to execute swap: ${error.message}`
         });
       }
-      return false;
+      return { success: false, error: error?.message ?? "Unknown error" };
     }
   },
   examples: [
