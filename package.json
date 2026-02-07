@@ -32,7 +32,7 @@
     "@elizaos/core": "1.6.4",
     "@elizaos/plugin-arc": "file:./plugin-arc",
     "@elizaos/plugin-bootstrap": "1.6.4",
-    "@elizaos/plugin-defi-news": "./plugin-defi-news-1.x",
+    "@elizaos/plugin-defi-news": "file:./plugin-defi-news-1.x",
     "@elizaos/plugin-ens": "file:./plugin-ens",
     "@elizaos/plugin-google-genai": "^1.1.0",
     "@elizaos/plugin-morpho": "file:./plugin-morpho",

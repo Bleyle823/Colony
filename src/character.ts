@@ -1,7 +1,7 @@
 import { type Character } from '@elizaos/core';
 
 import { arcPlugin } from '@elizaos/plugin-arc';
-import { defiNewsPlugin } from '@elizaos/plugin-defi-news';
+import { defiNewsPlugin } from '../plugin-defi-news-1.x/src/index.ts';
 import { ensPlugin } from '@elizaos/plugin-ens';
 import { morphoPlugin } from '../plugin-morpho/src/index.ts';
 import { uniswapPlugin } from '@elizaos/plugin-uniswap';
