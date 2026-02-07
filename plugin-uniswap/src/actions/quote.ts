@@ -1,5 +1,6 @@
-import { Action, IAgentRuntime, Memory, State, HandlerCallback, elizaLogger } from "@elizaos/core";
+import { Action, ActionResult, IAgentRuntime, Memory, State, HandlerCallback, elizaLogger } from "@elizaos/core";
 import { UniswapService } from "../services/uniswapService";
+import { getTokenBySymbol } from "../services/tokens";
 
 export const getQuoteAction: Action = {
     name: "GET_QUOTE",
@@ -22,7 +23,10 @@ export const getQuoteAction: Action = {
         const amount = amountMatch ? amountMatch[0] : "1";
 
         const words = content.split(" ");
-        const symbols = words.filter(w => w === w.toUpperCase() && w.length > 1 && w.length < 6);
+        const symbols = words
+            .map(w => w.trim().replace(/[.,]/g, ''))
+            .filter(w => getTokenBySymbol(w));
+
         const tokenIn = symbols[0] || "ETH";
         const tokenOut = symbols[1] || "USDC";
 
@@ -37,7 +41,7 @@ export const getQuoteAction: Action = {
                     text: `Quote: ${amount} ${tokenIn} ≈ ${quote} ${tokenOut} on Uniswap V4.`,
                 });
             }
-            return true;
+            return { success: true, text: `Quote: ${amount} ${tokenIn} ≈ ${quote} ${tokenOut}`, data: { amount, tokenIn, tokenOut, quote } };
         } catch (error: any) {
             elizaLogger.error("Error in GET_QUOTE handler:", error);
             if (callback) {
@@ -45,7 +49,7 @@ export const getQuoteAction: Action = {
                     text: `Failed to get quote: ${error.message}`,
                 });
             }
-            return false;
+            return { success: false, error: error?.message ?? "Unknown error" };
         }
     },
     examples: [

@@ -85,21 +85,21 @@ var UniswapService = class extends Service {
     this.wallet = null;
   }
   async initialize(runtime) {
-    const rpcUrl = runtime.getSetting("UNISWAP_RPC_URL") || runtime.getSetting("BASE_RPC_URL") || runtime.getSetting("EVM_PROVIDER_URL") || runtime.getSetting("ETHEREUM_PROVIDER_URL");
-    if (!rpcUrl)
-      throw new Error("UNISWAP_RPC_URL, BASE_RPC_URL, or EVM_PROVIDER_URL is not configured");
+    const rpcUrl = runtime.getSetting("ETHEREUM_PROVIDER_URL") || runtime.getSetting("EVM_PROVIDER_URL") || runtime.getSetting("UNISWAP_RPC_URL") || runtime.getSetting("BASE_RPC_URL");
+    if (!rpcUrl) throw new Error("UNISWAP_RPC_URL, BASE_RPC_URL, or EVM_PROVIDER_URL is not configured");
     this.provider = new ethers.JsonRpcProvider(rpcUrl);
     const privateKey = runtime.getSetting("EVM_PRIVATE_KEY") || runtime.getSetting("WALLET_PRIVATE_KEY");
     if (privateKey) {
       this.wallet = new ethers.Wallet(privateKey, this.provider);
     }
+    const network = await this.provider.getNetwork();
+    logger.info(`Uniswap Service initialized on chain ID: ${network.chainId}`);
   }
   /**
    * Get a quote for swapping tokenIn to tokenOut
    */
   async getQuote(tokenInSymbol, tokenOutSymbol, amountIn) {
-    if (!this.provider)
-      throw new Error("Provider not initialized");
+    if (!this.provider) throw new Error("Provider not initialized");
     const tokenIn = getTokenBySymbol(tokenInSymbol);
     const tokenOut = getTokenBySymbol(tokenOutSymbol);
     if (!tokenIn || !tokenOut) {
@@ -132,18 +132,71 @@ var UniswapService = class extends Service {
     }
   }
   /**
-   * Execute a swap
+   * Execute a swap using SwapRouter02 (Uniswap V3)
    */
   async executeSwap(tokenInSymbol, tokenOutSymbol, amountIn) {
-    if (!this.wallet)
-      throw new Error("Wallet not initialized with private key");
+    if (!this.wallet) throw new Error("Wallet not initialized with private key");
     const tokenIn = getTokenBySymbol(tokenInSymbol);
     const tokenOut = getTokenBySymbol(tokenOutSymbol);
     if (!tokenIn || !tokenOut) {
       throw new Error(`Token configuration not found for ${tokenInSymbol} or ${tokenOutSymbol}`);
     }
+    const SWAP_ROUTER_02_ADDRESS = "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45";
+    const amountInWei = ethers.parseUnits(amountIn, tokenIn.decimals);
+    if (tokenInSymbol !== "ETH" && tokenInSymbol !== "WETH") {
+      const tokenContract = new ethers.Contract(tokenIn.address, [
+        "function balanceOf(address) view returns (uint256)",
+        "function allowance(address, address) view returns (uint256)",
+        "function approve(address, uint256) returns (bool)"
+      ], this.wallet);
+      const code = await this.provider.getCode(tokenIn.address);
+      if (code === "0x") {
+        throw new Error(`Token contract ${tokenInSymbol} not found at ${tokenIn.address} on this chain. Check your configuration.`);
+      }
+      const balance = await tokenContract.balanceOf(this.wallet.address);
+      if (balance < amountInWei) {
+        throw new Error(`Insufficient balance of ${tokenInSymbol}. Have ${ethers.formatUnits(balance, tokenIn.decimals)}, need ${amountIn}`);
+      }
+      const allowance = await tokenContract.allowance(this.wallet.address, SWAP_ROUTER_02_ADDRESS);
+      if (allowance < amountInWei) {
+        logger.info(`Approving ${tokenInSymbol} for Uniswap Router...`);
+        const tx = await tokenContract.approve(SWAP_ROUTER_02_ADDRESS, ethers.MaxUint256);
+        logger.info(`Approval tx sent: ${tx.hash}`);
+        await tx.wait();
+        logger.info("Approval confirmed");
+      }
+    } else if (tokenInSymbol === "ETH") {
+      const balance = await this.provider.getBalance(this.wallet.address);
+      if (balance < amountInWei) {
+        throw new Error(`Insufficient ETH balance. Have ${ethers.formatEther(balance)}, need ${amountIn}`);
+      }
+    }
     logger.info(`Executing swap: ${amountIn} ${tokenInSymbol} -> ${tokenOutSymbol}`);
-    return "Transaction hash placeholder";
+    const router = new ethers.Contract(SWAP_ROUTER_02_ADDRESS, [
+      "function exactInputSingle((address tokenIn, address tokenOut, uint24 fee, address recipient, uint256 amountIn, uint256 amountOutMinimum, uint160 sqrtPriceLimitX96)) external payable returns (uint256 amountOut)"
+    ], this.wallet);
+    const params = {
+      tokenIn: tokenIn.address,
+      tokenOut: tokenOut.address,
+      fee: 3e3,
+      // 0.3% pool fee
+      recipient: this.wallet.address,
+      amountIn: amountInWei,
+      amountOutMinimum: 0,
+      // No slippage protection for demo simplicity
+      sqrtPriceLimitX96: 0
+    };
+    const overrides = tokenInSymbol === "ETH" ? { value: amountInWei } : {};
+    try {
+      const tx = await router.exactInputSingle(params, overrides);
+      logger.info(`Swap transaction sent: ${tx.hash}`);
+      const receipt = await tx.wait();
+      logger.info(`Swap confirmed in block ${receipt.blockNumber}`);
+      return tx.hash;
+    } catch (error) {
+      logger.error("Swap failed executing transaction:", error);
+      throw new Error(`Swap transaction failed: ${error.reason || error.message}`);
+    }
   }
 };
 UniswapService.serviceType = "uniswap";
@@ -162,7 +215,7 @@ var getQuoteAction = {
     const amountMatch = content.match(/(\d+(\.\d+)?)/);
     const amount = amountMatch ? amountMatch[0] : "1";
     const words = content.split(" ");
-    const symbols = words.filter((w) => w === w.toUpperCase() && w.length > 1 && w.length < 6);
+    const symbols = words.map((w) => w.trim().replace(/[.,]/g, "")).filter((w) => getTokenBySymbol(w));
     const tokenIn = symbols[0] || "ETH";
     const tokenOut = symbols[1] || "USDC";
     try {
@@ -205,8 +258,8 @@ var getQuoteAction = {
 // src/actions/swap.ts
 import { elizaLogger as elizaLogger2 } from "@elizaos/core";
 var swapTokensAction = {
-  name: "SWAP_TOKENS",
-  similes: ["SWAP", "TRADE", "EXCHANGE"],
+  name: "EVM_SWAP_TOKENS",
+  similes: ["SWAP_TOKENS", "SWAP", "TRADE", "EXCHANGE"],
   description: "Execute a token swap on Uniswap V4",
   validate: async (runtime, message) => {
     return !!runtime.getSetting("EVM_PRIVATE_KEY") || !!runtime.getSetting("WALLET_PRIVATE_KEY");
@@ -216,10 +269,15 @@ var swapTokensAction = {
     const content = message.content.text || "";
     const amountMatch = content.match(/(\d+(\.\d+)?)/);
     const amount = amountMatch ? amountMatch[0] : "0";
-    const words = content.split(" ");
-    const symbols = words.filter((w) => w === w.toUpperCase() && w.length > 1 && w.length < 6);
-    const tokenIn = symbols[0] || "ETH";
-    const tokenOut = symbols[1] || "USDC";
+    const textWithoutAmount = content.replace(amount, "");
+    const words = textWithoutAmount.split(" ");
+    const symbols = words.map((w) => w.trim().replace(/[.,]/g, "")).filter((w) => getTokenBySymbol(w));
+    let tokenIn = symbols[0];
+    let tokenOut = symbols[1];
+    if (!tokenIn) tokenIn = "ETH";
+    if (!tokenOut) tokenOut = "USDC";
+    if (!amountMatch) {
+    }
     try {
       const service = new UniswapService(runtime);
       await service.initialize(runtime);
@@ -250,7 +308,20 @@ var swapTokensAction = {
         user: "{{agentName}}",
         content: {
           text: "Swap executed! Transaction Hash: 0x...",
-          action: "SWAP_TOKENS"
+          action: "EVM_SWAP_TOKENS"
+        }
+      }
+    ],
+    [
+      {
+        user: "{{user1}}",
+        content: { text: "Swap 1 USDC for MF-ONE" }
+      },
+      {
+        user: "{{agentName}}",
+        content: {
+          text: "Swap executed! Transaction Hash: 0x...",
+          action: "EVM_SWAP_TOKENS"
         }
       }
     ]
@@ -268,9 +339,9 @@ var uniswapPlugin = {
   evaluators: [],
   providers: []
 };
-var src_default = uniswapPlugin;
+var index_default = uniswapPlugin;
 export {
-  src_default as default,
+  index_default as default,
   uniswapPlugin
 };
 //# sourceMappingURL=index.js.map

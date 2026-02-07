@@ -120,13 +120,12 @@ var buyRwaAction = {
       if (!quote) {
         throw new Error("No quote found");
       }
-      elizaLogger.log("Quote received:", quote);
       const swapResult = await jupiterQuoteApi.swapPost({
         swapRequest: {
           quoteResponse: quote,
-          userPublicKey: wallet.publicKey.toBase58()
-          // dynamicComputeUnitLimit: true, // Commenting out to simplify
-          // prioritizationFeeLamports: "auto", // Commenting out to see if this is the cause of "jitoTipLamports" check error
+          userPublicKey: wallet.publicKey.toBase58(),
+          dynamicComputeUnitLimit: true,
+          prioritizationFeeLamports: "auto"
         }
       });
       if (!swapResult || !swapResult.swapTransaction) {

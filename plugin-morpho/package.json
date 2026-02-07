@@ -1,0 +1,27 @@
+{
+    "name": "@elizaos/plugin-morpho",
+    "version": "1.0.0",
+    "description": "Morpho Blue plugin for ElizaOS",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "build": "tsup src/index.ts --format esm --dts",
+        "dev": "tsup src/index.ts --format esm --dts --watch",
+        "test": "vitest run"
+    },
+    "dependencies": {
+        "@elizaos/core": "1.6.4",
+        "@morpho-org/blue-sdk": "^5.14.0",
+        "@morpho-org/blue-sdk-viem": "^4.2.3",
+        "@morpho-org/morpho-ts": "^2.4.6",
+        "viem": "^2.45.1"
+    },
+    "devDependencies": {
+        "tsup": "^8.0.2",
+        "typescript": "^5.6.3",
+        "vitest": "^1.4.0"
+    },
+    "engines": {
+        "node": ">=23.0.0"
+    }
+}

@@ -28,10 +28,10 @@ export class UniswapService extends Service {
 
     async initialize(runtime: IAgentRuntime): Promise<void> {
         const rpcUrl =
-            runtime.getSetting("UNISWAP_RPC_URL") ||
-            runtime.getSetting("BASE_RPC_URL") ||
+            runtime.getSetting("ETHEREUM_PROVIDER_URL") ||
             runtime.getSetting("EVM_PROVIDER_URL") ||
-            runtime.getSetting("ETHEREUM_PROVIDER_URL");
+            runtime.getSetting("UNISWAP_RPC_URL") ||
+            runtime.getSetting("BASE_RPC_URL");
 
         if (!rpcUrl) throw new Error("UNISWAP_RPC_URL, BASE_RPC_URL, or EVM_PROVIDER_URL is not configured");
 
@@ -41,6 +41,9 @@ export class UniswapService extends Service {
         if (privateKey) {
             this.wallet = new ethers.Wallet(privateKey, this.provider);
         }
+
+        const network = await this.provider.getNetwork();
+        logger.info(`Uniswap Service initialized on chain ID: ${network.chainId}`);
     }
 
     /**
@@ -89,7 +92,7 @@ export class UniswapService extends Service {
     }
 
     /**
-     * Execute a swap
+     * Execute a swap using SwapRouter02 (Uniswap V3)
      */
     async executeSwap(tokenInSymbol: string, tokenOutSymbol: string, amountIn: string): Promise<string> {
         if (!this.wallet) throw new Error("Wallet not initialized with private key");
@@ -101,13 +104,74 @@ export class UniswapService extends Service {
             throw new Error(`Token configuration not found for ${tokenInSymbol} or ${tokenOutSymbol}`);
         }
 
-        // Implementation of swap execution would go here using Universal Router
-        // This requires generating the calldata similar to the guide provided
-        // For now, returning a placeholder as we need the full router SDK integration
+        const SWAP_ROUTER_02_ADDRESS = "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45";
+        const amountInWei = ethers.parseUnits(amountIn, tokenIn.decimals);
 
+        // 1. Check Balance and Allowance
+        if (tokenInSymbol !== 'ETH' && tokenInSymbol !== 'WETH') { // Treat WETH as ERC20
+            const tokenContract = new ethers.Contract(tokenIn.address, [
+                "function balanceOf(address) view returns (uint256)",
+                "function allowance(address, address) view returns (uint256)",
+                "function approve(address, uint256) returns (bool)"
+            ], this.wallet);
+
+            // Verify contract exists
+            const code = await this.provider!.getCode(tokenIn.address);
+            if (code === '0x') {
+                throw new Error(`Token contract ${tokenInSymbol} not found at ${tokenIn.address} on this chain. Check your configuration.`);
+            }
+
+            const balance = await tokenContract.balanceOf(this.wallet.address);
+            if (balance < amountInWei) {
+                throw new Error(`Insufficient balance of ${tokenInSymbol}. Have ${ethers.formatUnits(balance, tokenIn.decimals)}, need ${amountIn}`);
+            }
+
+            const allowance = await tokenContract.allowance(this.wallet.address, SWAP_ROUTER_02_ADDRESS);
+            if (allowance < amountInWei) {
+                logger.info(`Approving ${tokenInSymbol} for Uniswap Router...`);
+                const tx = await tokenContract.approve(SWAP_ROUTER_02_ADDRESS, ethers.MaxUint256);
+                logger.info(`Approval tx sent: ${tx.hash}`);
+                await tx.wait();
+                logger.info("Approval confirmed");
+            }
+        } else if (tokenInSymbol === 'ETH') {
+            const balance = await this.provider!.getBalance(this.wallet.address);
+            if (balance < amountInWei) {
+                throw new Error(`Insufficient ETH balance. Have ${ethers.formatEther(balance)}, need ${amountIn}`);
+            }
+        }
+
+        // 2. Execute Swap
         logger.info(`Executing swap: ${amountIn} ${tokenInSymbol} -> ${tokenOutSymbol}`);
 
-        // TODO: Complete execute logic with V4Planner and UniversalRouter
-        return "Transaction hash placeholder";
+        const router = new ethers.Contract(SWAP_ROUTER_02_ADDRESS, [
+            "function exactInputSingle((address tokenIn, address tokenOut, uint24 fee, address recipient, uint256 amountIn, uint256 amountOutMinimum, uint160 sqrtPriceLimitX96)) external payable returns (uint256 amountOut)"
+        ], this.wallet);
+
+        const params = {
+            tokenIn: tokenIn.address,
+            tokenOut: tokenOut.address,
+            fee: 3000, // 0.3% pool fee
+            recipient: this.wallet.address,
+            amountIn: amountInWei,
+            amountOutMinimum: 0, // No slippage protection for demo simplicity
+            sqrtPriceLimitX96: 0
+        };
+
+        const overrides = tokenInSymbol === 'ETH' ? { value: amountInWei } : {};
+
+        try {
+            const tx = await router.exactInputSingle(params, overrides);
+            logger.info(`Swap transaction sent: ${tx.hash}`);
+
+            // Wait for confirmation
+            const receipt = await tx.wait();
+            logger.info(`Swap confirmed in block ${receipt.blockNumber}`);
+
+            return tx.hash;
+        } catch (error: any) {
+            logger.error("Swap failed executing transaction:", error);
+            throw new Error(`Swap transaction failed: ${error.reason || error.message}`);
+        }
     }
 }

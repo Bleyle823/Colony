@@ -1,8 +1,9 @@
 import { type Character } from '@elizaos/core';
 
 import { arcPlugin } from '@elizaos/plugin-arc';
+import { defiNewsPlugin } from '@elizaos/plugin-defi-news';
 import { ensPlugin } from '@elizaos/plugin-ens';
-import { morphoPlugin } from '@elizaos/plugin-morpho';
+import { morphoPlugin } from '../plugin-morpho/src/index.ts';
 import { uniswapPlugin } from '@elizaos/plugin-uniswap';
 
 /**
@@ -20,6 +21,7 @@ export const character: Character = {
     // Core plugins first
     '@elizaos/plugin-sql',
     arcPlugin,
+    defiNewsPlugin,
     ensPlugin,
     morphoPlugin,
     uniswapPlugin,

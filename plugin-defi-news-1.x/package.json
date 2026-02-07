@@ -6,7 +6,7 @@
   "types": "dist/index.d.ts",
   "description": "DeFi and cryptocurrency market data, news, and analytics plugin for ElizaOS",
   "dependencies": {
-    "@elizaos/core": "workspace:*",
+    "@elizaos/core": "1.6.4",
     "@solana/web3.js": "^1.95.2"
   },
   "devDependencies": {
@@ -37,4 +37,3 @@
     }
   }
 }
-

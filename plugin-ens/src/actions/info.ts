@@ -71,7 +71,7 @@ export const getEnsTextAction: Action = {
     similes: ["READ_ENS_TEXT", "GET_TXT_RECORD", "FETCH_ENS_KEY"],
     description: "Read arbitrary text records for an ENS name (e.g. email, twitter, url).",
     validate: async (runtime: IAgentRuntime) => {
-         return !!runtime.getSetting("ETHEREUM_PROVIDER_URL");
+        return !!(runtime.getSetting("ETHEREUM_PROVIDER_URL") || runtime.getSetting("EVM_PROVIDER_URL"));
     },
     handler: async (
         runtime: IAgentRuntime,
