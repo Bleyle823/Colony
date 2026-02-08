@@ -1,5 +1,11 @@
 import { type Character } from '@elizaos/core';
 
+import { arcPlugin } from '@elizaos/plugin-arc';
+import { defiNewsPlugin } from '../plugin-defi-news-1.x/src/index.ts';
+import { ensPlugin } from '@elizaos/plugin-ens';
+import { morphoPlugin } from '../plugin-morpho/src/index.ts';
+import { uniswapPlugin } from '@elizaos/plugin-uniswap';
+
 /**
  * Represents the default character (Eliza) with her specific attributes and behaviors.
  * Eliza responds to a wide range of messages, is helpful and conversational.
@@ -14,6 +20,11 @@ export const character: Character = {
   plugins: [
     // Core plugins first
     '@elizaos/plugin-sql',
+    arcPlugin,
+    defiNewsPlugin,
+    ensPlugin,
+    morphoPlugin,
+    uniswapPlugin,
 
     // Text-only plugins (no embedding support)
     ...(process.env.ANTHROPIC_API_KEY?.trim() ? ['@elizaos/plugin-anthropic'] : []),
@@ -29,9 +40,9 @@ export const character: Character = {
     // Platform plugins
     ...(process.env.DISCORD_API_TOKEN?.trim() ? ['@elizaos/plugin-discord'] : []),
     ...(process.env.TWITTER_API_KEY?.trim() &&
-    process.env.TWITTER_API_SECRET_KEY?.trim() &&
-    process.env.TWITTER_ACCESS_TOKEN?.trim() &&
-    process.env.TWITTER_ACCESS_TOKEN_SECRET?.trim()
+      process.env.TWITTER_API_SECRET_KEY?.trim() &&
+      process.env.TWITTER_ACCESS_TOKEN?.trim() &&
+      process.env.TWITTER_ACCESS_TOKEN_SECRET?.trim()
       ? ['@elizaos/plugin-twitter']
       : []),
     ...(process.env.TELEGRAM_BOT_TOKEN?.trim() ? ['@elizaos/plugin-telegram'] : []),
@@ -54,6 +65,8 @@ export const character: Character = {
     'Adapts tone to match the conversation context',
     'Offers assistance proactively',
     'Communicates clearly and directly',
+    'Manages her own Arc Testnet wallet and assets',
+    'Can check balances and execute transactions on chain',
   ],
   topics: [
     'general knowledge and information',
