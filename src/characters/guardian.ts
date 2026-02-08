@@ -92,11 +92,7 @@ Be proactive in risk detection and swift in emergency response coordination.`,
     'portfolio safety',
   ],
 
-  plugins: [
-    '@elizaos/plugin-sql',
-    '@elizaos/plugin-defi-news',
-    // Will add plugin-swarm for coordination
-  ],
+  plugins: [], // Plugins are set on the agent in src/index.ts (defi-news, swarm)
 
   settings: {
     voice: 'en-US-Neural2-C',

@@ -13,20 +13,12 @@ import { ensPlugin } from '@elizaos/plugin-ens';
 import { defiNewsPlugin } from '../plugin-defi-news-1.x/src/index.ts';
 import { uniswapPlugin } from '@elizaos/plugin-uniswap';
 import { morphoPlugin } from '../plugin-morpho/src/index.ts';
-import { circlePlugin } from '../plugin-circle/src/index.ts';
 import { solanaPlugin } from '../plugin-solana/src/index.ts';
-import { swarmPlugin } from '../plugin-swarm/src/index.ts';
+import openRouterPlugin from '@elizaos/plugin-openrouter';
 
-// Import swarm coordinator service
-import { swarmCoordinator } from './services/swarmCoordinator.ts';
-
-const initSwarmAgent = (agentName: string) => async ({ runtime }: { runtime: IAgentRuntime }) => {
+const initSwarmAgent = (agentName: string) => async (runtime: IAgentRuntime) => {
   logger.info(`Initializing ${agentName} agent`);
-  
-  // Initialize swarm coordinator for all agents
-  await swarmCoordinator.initialize(runtime);
-  
-  logger.info(`${agentName} agent initialized with swarm coordination`);
+  logger.info(`${agentName} agent initialized`);
 };
 
 // Manager Agent - User Interface Coordinator
@@ -34,8 +26,10 @@ export const managerAgent: ProjectAgent = {
   character: managerCharacter,
   init: initSwarmAgent('Manager'),
   plugins: [
+    '@elizaos/plugin-sql',        // Database/memory
+    '@elizaos/plugin-bootstrap',  // Core actions
     starterPlugin,
-    swarmPlugin, // Swarm coordination
+    openRouterPlugin, // AI model provider
   ],
 };
 
@@ -44,13 +38,14 @@ export const treasurerAgent: ProjectAgent = {
   character: treasurerCharacter,
   init: initSwarmAgent('Treasurer'),
   plugins: [
+    '@elizaos/plugin-sql',        // Database/memory
+    '@elizaos/plugin-bootstrap',  // Core actions
     starterPlugin,
+    openRouterPlugin, // AI model provider
     arcPlugin,
     ensPlugin,
     uniswapPlugin,
-    circlePlugin, // Enhanced Circle integration
-    solanaPlugin, // Solana blockchain operations
-    swarmPlugin, // Swarm coordination
+    solanaPlugin,
   ],
 };
 
@@ -59,9 +54,11 @@ export const strategistAgent: ProjectAgent = {
   character: strategistCharacter,
   init: initSwarmAgent('Strategist'),
   plugins: [
+    '@elizaos/plugin-sql',        // Database/memory
+    '@elizaos/plugin-bootstrap',  // Core actions
     starterPlugin,
+    openRouterPlugin, // AI model provider
     morphoPlugin,
-    swarmPlugin, // Swarm coordination
   ],
 };
 
@@ -70,9 +67,11 @@ export const guardianAgent: ProjectAgent = {
   character: guardianCharacter,
   init: initSwarmAgent('Guardian'),
   plugins: [
+    '@elizaos/plugin-sql',        // Database/memory
+    '@elizaos/plugin-bootstrap',  // Core actions
     starterPlugin,
+    openRouterPlugin, // AI model provider
     defiNewsPlugin,
-    swarmPlugin, // Swarm coordination
   ],
 };
 
@@ -91,8 +90,5 @@ export { managerCharacter } from './characters/manager.ts';
 export { treasurerCharacter } from './characters/treasurer.ts';
 export { strategistCharacter } from './characters/strategist.ts';
 export { guardianCharacter } from './characters/guardian.ts';
-
-// Export swarm coordinator
-export { swarmCoordinator } from './services/swarmCoordinator.ts';
 
 export default project;

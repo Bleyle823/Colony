@@ -517,37 +517,8 @@ Transaction Hash: ${txHash}`
 };
 
 // src/providers/morphoProvider.ts
-function isMorphoRelated(message) {
-  const text = message.content?.text?.toLowerCase() || "";
-  const morphoKeywords = [
-    "morpho",
-    "lending",
-    "borrowing",
-    "collateral",
-    "loan",
-    "borrow",
-    "lend",
-    "supply",
-    "position",
-    "mf-one",
-    "usdc",
-    "repay",
-    "withdraw",
-    "what is my position",
-    "my morpho",
-    "lending position"
-  ];
-  return morphoKeywords.some((keyword) => text.includes(keyword));
-}
 var morphoProvider = {
-  name: "morpho_provider",
-  position: 0,
-  // Run conditionally
-  get: async (runtime, message, _state) => {
-    if (!isMorphoRelated(message)) {
-      return "";
-    }
-    console.log("Morpho provider called (message is Morpho-related)");
+  get: async (runtime, _message, _state) => {
     try {
       const service = new MorphoService(runtime);
       await service.initialize();
@@ -560,7 +531,6 @@ var morphoProvider = {
 - Borrowed: ${position.borrowed} ${position.loanToken}
 `;
     } catch (error) {
-      console.error("Error in Morpho provider:", error);
       return `Morpho Blue: Error fetching position (${error instanceof Error ? error.message : "Unknown error"})`;
     }
   }
@@ -568,8 +538,8 @@ var morphoProvider = {
 
 // src/index.ts
 var morphoPlugin = {
-  name: "morpho",
-  description: "Morpho Blue integration for supplying collateral and borrowing assets",
+  name: "morpho-ethereum",
+  description: "Morpho Blue integration (Ethereum mainnet) for supplying collateral and borrowing assets",
   actions: [
     supplyCollateralAction,
     borrowAction,

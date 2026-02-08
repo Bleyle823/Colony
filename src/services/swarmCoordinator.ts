@@ -37,10 +37,10 @@ export interface PortfolioState {
 export class SwarmCoordinator extends Service {
   static serviceType: ServiceType = 'swarm_coordinator';
 
-  // Room IDs for agent coordination
-  private readonly COORDINATION_ROOM = 'swarm-coordination';
-  private readonly PORTFOLIO_ROOM = 'portfolio-state';
-  private readonly ALERTS_ROOM = 'risk-alerts';
+  // Room IDs for agent coordination (UUIDs will be loaded/created during initialization)
+  private COORDINATION_ROOM!: string;
+  private PORTFOLIO_ROOM!: string;
+  private ALERTS_ROOM!: string;
 
   constructor() {
     super();
@@ -49,7 +49,7 @@ export class SwarmCoordinator extends Service {
   async initialize(runtime: IAgentRuntime): Promise<void> {
     elizaLogger.info('Initializing SwarmCoordinator service');
     
-    // Ensure coordination rooms exist
+    // Ensure coordination rooms exist and get their UUIDs
     await this.ensureRoomsExist(runtime);
     
     elizaLogger.info('SwarmCoordinator service initialized');
@@ -84,7 +84,7 @@ export class SwarmCoordinator extends Service {
     // Send message to coordination room
     const message: Memory = {
       id: uuidv4(),
-      userId: fromAgent,
+      userId: uuidv4(), // Use generated UUID for agent identifier
       agentId: runtime.agentId,
       roomId: this.COORDINATION_ROOM,
       content: {
@@ -136,7 +136,7 @@ export class SwarmCoordinator extends Service {
     if (status === 'completed' || status === 'failed') {
       const message: Memory = {
         id: uuidv4(),
-        userId: task.toAgent,
+        userId: uuidv4(), // Use generated UUID
         agentId: runtime.agentId,
         roomId: this.COORDINATION_ROOM,
         content: {
@@ -215,7 +215,7 @@ export class SwarmCoordinator extends Service {
     // Broadcast update to portfolio room
     const message: Memory = {
       id: uuidv4(),
-      userId: 'system',
+      userId: uuidv4(), // Use generated UUID for system messages
       agentId: runtime.agentId,
       roomId: this.PORTFOLIO_ROOM,
       content: {
@@ -266,7 +266,7 @@ export class SwarmCoordinator extends Service {
 
     const alertMessage: Memory = {
       id: alertId,
-      userId: 'guardian',
+      userId: uuidv4(), // Use generated UUID
       agentId: runtime.agentId,
       roomId: this.ALERTS_ROOM,
       content: {
@@ -315,24 +315,67 @@ export class SwarmCoordinator extends Service {
    * Ensure coordination rooms exist
    */
   private async ensureRoomsExist(runtime: IAgentRuntime): Promise<void> {
-    const rooms = [this.COORDINATION_ROOM, this.PORTFOLIO_ROOM, this.ALERTS_ROOM];
+    // Store room UUIDs in database with descriptive keys
+    const roomKeys = {
+      coordination: 'swarm_room:coordination',
+      portfolio: 'swarm_room:portfolio',
+      alerts: 'swarm_room:alerts',
+    };
     
-    for (const roomId of rooms) {
-      // Create a system message to ensure room exists
+    // Load or create coordination room UUID
+    let coordinationRoomId = await runtime.db.get(roomKeys.coordination);
+    if (!coordinationRoomId) {
+      coordinationRoomId = uuidv4();
+      await runtime.db.set(roomKeys.coordination, coordinationRoomId);
+      elizaLogger.info(`Created coordination room: ${coordinationRoomId}`);
+    }
+    this.COORDINATION_ROOM = coordinationRoomId;
+    
+    // Load or create portfolio room UUID
+    let portfolioRoomId = await runtime.db.get(roomKeys.portfolio);
+    if (!portfolioRoomId) {
+      portfolioRoomId = uuidv4();
+      await runtime.db.set(roomKeys.portfolio, portfolioRoomId);
+      elizaLogger.info(`Created portfolio room: ${portfolioRoomId}`);
+    }
+    this.PORTFOLIO_ROOM = portfolioRoomId;
+    
+    // Load or create alerts room UUID
+    let alertsRoomId = await runtime.db.get(roomKeys.alerts);
+    if (!alertsRoomId) {
+      alertsRoomId = uuidv4();
+      await runtime.db.set(roomKeys.alerts, alertsRoomId);
+      elizaLogger.info(`Created alerts room: ${alertsRoomId}`);
+    }
+    this.ALERTS_ROOM = alertsRoomId;
+    
+    // Create initial system messages for each room
+    const rooms = [
+      { id: this.COORDINATION_ROOM, name: 'coordination' },
+      { id: this.PORTFOLIO_ROOM, name: 'portfolio' },
+      { id: this.ALERTS_ROOM, name: 'alerts' },
+    ];
+    
+    for (const room of rooms) {
       const message: Memory = {
         id: uuidv4(),
-        userId: 'system',
+        userId: uuidv4(), // Use a system user UUID
         agentId: runtime.agentId,
-        roomId,
+        roomId: room.id,
         content: {
-          text: `Room initialized: ${roomId}`,
+          text: `Swarm ${room.name} room initialized`,
           action: 'ROOM_INIT',
           source: 'swarm_coordinator',
         },
         createdAt: Date.now(),
       };
 
-      await runtime.createMemory(message);
+      try {
+        await runtime.createMemory(message);
+        elizaLogger.info(`Initialized ${room.name} room: ${room.id}`);
+      } catch (error) {
+        elizaLogger.debug(`Room ${room.name} may already exist: ${error}`);
+      }
     }
   }
 }

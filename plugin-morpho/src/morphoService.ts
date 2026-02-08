@@ -11,7 +11,6 @@ import {
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { mainnet } from "viem/chains";
-import { mainnet } from "viem/chains";
 import { blueAbi } from "@morpho-org/blue-sdk-viem";
 import { IAgentRuntime, elizaLogger } from "@elizaos/core";
 

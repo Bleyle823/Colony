@@ -6,8 +6,8 @@ import { withdrawCollateralAction } from "./actions/withdraw";
 import { morphoProvider } from "./providers/morphoProvider";
 
 export const morphoPlugin: Plugin = {
-    name: "morpho",
-    description: "Morpho Blue integration for supplying collateral and borrowing assets",
+    name: "morpho-ethereum",
+    description: "Morpho Blue integration (Ethereum mainnet) for supplying collateral and borrowing assets",
     actions: [
         supplyCollateralAction,
         borrowAction,

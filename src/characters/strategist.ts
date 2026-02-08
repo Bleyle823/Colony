@@ -91,11 +91,7 @@ Prioritize capital preservation while optimizing yields.`,
     'APY optimization',
   ],
 
-  plugins: [
-    '@elizaos/plugin-sql',
-    '@elizaos/plugin-morpho',
-    // Will add plugin-swarm for coordination
-  ],
+  plugins: [], // Plugins are set on the agent in src/index.ts (morpho-ethereum, swarm)
 
   settings: {
     voice: 'en-US-Neural2-A',
