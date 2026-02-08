@@ -1,5 +1,33 @@
 node_modules
 .env
 .env copy
-.env copy
 .cursor/plans/multi-agent_usdc_swarm_08ce248a.plan.md
+
+# Test and summary files
+IMPLEMENTATION_SUMMARY.md
+KAMINO_FIXES_SUMMARY.md
+UNISWAP_FIXES_SUMMARY.md
+PLUGIN_TRANSFER_SUMMARY.md
+TEST-PLUGINS.md
+CLAUDE.md
+
+# Test scripts
+test-implementation.ts
+test-lending-integration.ts
+test-private-key.ts
+test-tesla-xstock.ts
+test-tslax-integration.ts
+test-updated-balance.ts
+test-enhanced-uniswap.ts
+test-rpc-connectivity.ts
+test-parsing.ts
+test-agent-plugins.ts
+test-all-plugins.ts
+test-arc-env.ts
+test-arc-plugin.mjs
+test-morpho-functionality.ts
+test-morpho-integration.ts
+test-morpho-load.ts
+
+# Plugin directory
+plugin-defi-news-1.x/

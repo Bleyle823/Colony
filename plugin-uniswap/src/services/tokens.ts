@@ -40,6 +40,27 @@ export const RWA_TOKENS: TokenConfig = {
         'AA_FalconXUSDC',
         'AA_FalconXUSDC'
     ),
+    'APPLON': new Token(
+        CHAIN_ID,
+        '0x14c3abf95cb9c93a8b82c1cdcb76d72cb87b2d4c',
+        18,
+        'APPLON',
+        'Apple (Ondo Tokenized Stock)'
+    ),
+    'AAPLON': new Token(
+        CHAIN_ID,
+        '0x14c3abf95cb9c93a8b82c1cdcb76d72cb87b2d4c',
+        18,
+        'AAPLON',
+        'Apple (Ondo Tokenized Stock)'
+    ),
+    'APPLE': new Token(
+        CHAIN_ID,
+        '0x14c3abf95cb9c93a8b82c1cdcb76d72cb87b2d4c',
+        18,
+        'APPLE',
+        'Apple (Ondo Tokenized Stock)'
+    ),
     'xAAPL': new Token(
         CHAIN_ID,
         '0x0000000000000000000000000000000000000002', // Placeholder
