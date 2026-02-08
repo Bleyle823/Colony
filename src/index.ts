@@ -14,6 +14,7 @@ import { defiNewsPlugin } from '../plugin-defi-news-1.x/src/index.ts';
 import { uniswapPlugin } from '@elizaos/plugin-uniswap';
 import { morphoPlugin } from '../plugin-morpho/src/index.ts';
 import { solanaPlugin } from '../plugin-solana/src/index.ts';
+import { kaminoPlugin } from '../plugin-kamino/src/index.ts';
 import openRouterPlugin from '@elizaos/plugin-openrouter';
 
 const initSwarmAgent = (agentName: string) => async (runtime: IAgentRuntime) => {
@@ -58,7 +59,8 @@ export const strategistAgent: ProjectAgent = {
     '@elizaos/plugin-bootstrap',  // Core actions
     starterPlugin,
     openRouterPlugin, // AI model provider
-    morphoPlugin,
+    solanaPlugin,     // Solana operations for Kamino
+    kaminoPlugin,     // Kamino lending operations
   ],
 };
 

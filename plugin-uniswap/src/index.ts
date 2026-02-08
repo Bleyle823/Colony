@@ -1,13 +1,15 @@
 import { Plugin } from "@elizaos/core";
 import { getQuoteAction } from "./actions/quote";
 import { swapTokensAction } from "./actions/swap";
+import { enhancedSwapTokensAction } from "./actions/enhancedSwap";
 
 export const uniswapPlugin: Plugin = {
     name: "uniswap",
-    description: "Uniswap V4 Plugin for Swapping and Quoting",
+    description: "Enhanced Uniswap V4 Plugin for Swapping and Quoting with Robust RPC Handling",
     actions: [
         getQuoteAction,
-        swapTokensAction
+        swapTokensAction,
+        enhancedSwapTokensAction // Enhanced version with better error handling
     ],
     evaluators: [],
     providers: [],
